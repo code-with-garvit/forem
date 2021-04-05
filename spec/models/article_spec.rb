@@ -18,7 +18,6 @@ RSpec.describe Article, type: :model do
     it { is_expected.to belong_to(:organization).optional }
     it { is_expected.to belong_to(:user) }
 
-    it { is_expected.to have_many(:buffer_updates).dependent(:destroy) }
     it { is_expected.to have_many(:comments).dependent(:nullify) }
     it { is_expected.to have_many(:html_variant_successes).dependent(:nullify) }
     it { is_expected.to have_many(:html_variant_trials).dependent(:nullify) }
@@ -437,7 +436,7 @@ RSpec.describe Article, type: :model do
 
   describe "#published_at" do
     it "does not have a published_at if not published" do
-      unpublished_article = build(:article, published: false)
+      unpublished_article = build(:article, published: false, published_at: nil)
       unpublished_article.validate # to make sure the front matter extraction happens
       expect(unpublished_article.published_at).to be_nil
     end
@@ -760,6 +759,89 @@ RSpec.describe Article, type: :model do
     it "returns nothing if no tagged articles" do
       articles = described_class.search_optimized("godsdsdsdsgoo")
       expect(articles).to be_empty
+    end
+  end
+
+  describe ".cached_tagged_with" do
+    it "can search for a single tag" do
+      included = create(:article, tags: "includeme")
+      excluded = create(:article, tags: "lol, nope")
+
+      articles = described_class.cached_tagged_with("includeme")
+
+      expect(articles).to include included
+      expect(articles).not_to include excluded
+      expect(articles.to_a).to eq described_class.tagged_with("includeme").to_a
+    end
+
+    it "can search among multiple tags" do
+      included = [
+        create(:article, tags: "omg, wtf"),
+        create(:article, tags: "omg, lol"),
+      ]
+      excluded = create(:article, tags: "nope, excluded")
+
+      articles = described_class.cached_tagged_with("omg")
+
+      expect(articles).to include(*included)
+      expect(articles).not_to include excluded
+      expect(articles.to_a).to include(*described_class.tagged_with("omg").to_a)
+    end
+
+    it "can search for multiple tags" do
+      included = create(:article, tags: "includeme, please, lol")
+      excluded_partial_match = create(:article, tags: "excluded, please")
+      excluded_no_match = create(:article, tags: "excluded, omg")
+
+      articles = described_class.cached_tagged_with(%w[includeme please])
+
+      expect(articles).to include included
+      expect(articles).not_to include excluded_partial_match
+      expect(articles).not_to include excluded_no_match
+      expect(articles.to_a).to eq described_class.tagged_with(%w[includeme please]).to_a
+    end
+  end
+
+  describe ".cached_tagged_with_any" do
+    it "can search for a single tag" do
+      included = create(:article, tags: "includeme")
+      excluded = create(:article, tags: "lol, nope")
+
+      articles = described_class.cached_tagged_with_any("includeme")
+
+      expect(articles).to include included
+      expect(articles).not_to include excluded
+      expect(articles.to_a).to eq described_class.tagged_with("includeme", any: true).to_a
+    end
+
+    it "can search among multiple tags" do
+      included = [
+        create(:article, tags: "omg, wtf"),
+        create(:article, tags: "omg, lol"),
+      ]
+      excluded = create(:article, tags: "nope, excluded")
+
+      articles = described_class.cached_tagged_with_any("omg")
+      expected = described_class.tagged_with("omg", any: true).to_a
+
+      expect(articles).to include(*included)
+      expect(articles).not_to include excluded
+      expect(articles.to_a).to include(*expected)
+    end
+
+    it "can search for multiple tags" do
+      included = create(:article, tags: "includeme, please, lol")
+      included_partial_match = create(:article, tags: "includeme, omg")
+      excluded_no_match = create(:article, tags: "excluded, omg")
+
+      articles = described_class.cached_tagged_with_any(%w[includeme please])
+      expected = described_class.tagged_with(%w[includeme please], any: true).to_a
+
+      expect(articles).to include included
+      expect(articles).to include included_partial_match
+      expect(articles).not_to include excluded_no_match
+
+      expect(articles.to_a).to include(*expected)
     end
   end
 
