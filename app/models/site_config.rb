@@ -29,18 +29,6 @@ class SiteConfig < RailsSettings::Base
   field :health_check_token, type: :string
   field :video_encoder_key, type: :string
 
-  # Campaign
-  field :campaign_call_to_action, type: :string, default: "Share your project"
-  field :campaign_hero_html_variant_name, type: :string, default: ""
-  field :campaign_featured_tags, type: :array, default: %w[]
-  field :campaign_sidebar_enabled, type: :boolean, default: 0
-  field :campaign_sidebar_image, type: :string, default: nil, validates: {
-    format: { with: VALID_URL, message: URL_MESSAGE }
-  }
-  field :campaign_url, type: :string, default: nil
-  field :campaign_articles_require_approval, type: :boolean, default: 0
-  field :campaign_articles_expiry_time, type: :integer, default: 4
-
   # Community Content
   field :community_name, type: :string, default: ApplicationConfig["COMMUNITY_NAME"] || "New Forem"
   field :community_emoji, type: :string, default: "🌱", validates: { emoji_only: true }
