@@ -6,6 +6,9 @@ module Settings
     # the cache, or call Settings::Campaign.clear_cache
     cache_prefix { "v1" }
 
+    VALID_URL = %r{\A(http|https)://([/|.\w\s-])*.[a-z]{2,5}(:[0-9]{1,5})?(/.*)?\z}.freeze
+    URL_MESSAGE = "must be a valid URL".freeze
+
     # Define your fields
     field :articles_expiry_time, type: :integer, default: 4
     field :articles_require_approval, type: :boolean, default: 0

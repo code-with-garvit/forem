@@ -46,7 +46,7 @@ RSpec.describe "SocialPreviews", type: :request do
       create(:tag, name: "theycoded", social_preview_template: "shecoded")
 
       she_coded_article = create(:article, tags: "shecoded, theycoded")
-      SiteConfig.campaign_featured_tags = "shecoded,theycoded"
+      Settings::Campaign.featured_tags = "shecoded,theycoded"
 
       get "/social_previews/article/#{she_coded_article.id}"
 
